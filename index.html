@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artistic WorldGuessr</title>
+    <link rel="stylesheet" href="view.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap" async defer></script>
+</head>
+<body>
+    <div id="name-form-container">
+        <h1>Welcome to Artistic WorldGuessr</h1>
+        <form id="name-form">
+            <label for="player1-name">Player 1 Name:</label>
+            <input type="text" id="player1-name" placeholder="Enter Player 1 Name" required>
+            <br>
+            <label for="player2-name">Player 2 Name:</label>
+            <input type="text" id="player2-name" placeholder="Enter Player 2 Name" required>
+            <br>
+            <button type="submit">Start Game</button>
+        </form>
+    </div>
+
+    <div id="game-container" style="display: none;">
+        <!-- Artistic Map View -->
+        <div id="map" aria-label="Interactive map for guessing locations"></div>
+
+        <!-- Scoreboard -->
+        <div id="scoreboard" aria-live="polite">
+            <p>Score: <span id="score">0</span></p>
+        </div>
+
+        <!-- Buttons -->
+        <button id="guess-button" aria-label="Make a guess">Make a Guess</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
