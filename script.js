@@ -2,6 +2,7 @@
 let players = [];
 let currentPlayerIndex = 0;
 let map;
+let streetView;
 let targetLocation;
 let currentRound = 1; // Start at round 1
 const maxRounds = 10; // Total number of rounds
@@ -15,21 +16,29 @@ function updateScoreboard() {
     `;
 }
 
-// Function to initialize the Leaflet Map
+// Function to initialize the Google Map and Street View
 function initMap() {
-    console.log("Leaflet Map initialized");
+    console.log("Google Map and Street View initialized");
 
     // Initialize the map
-    map = L.map('map').setView([0, 0], 2); // Center at [0, 0] with zoom level 2
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 0, lng: 0 }, // Center at [0, 0]
+        zoom: 2, // Zoom level
+    });
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    // Initialize Street View
+    streetView = new google.maps.StreetViewPanorama(document.getElementById('street-view'), {
+        position: { lat: 0, lng: 0 }, // Default position
+        pov: { heading: 0, pitch: 0 }, // Default point of view
+        zoom: 1,
+    });
+
+    // Link the Street View to the map
+    map.setStreetView(streetView);
 
     // Add a click listener to the map
-    map.on('click', (event) => {
-        handleMapClick(event.latlng);
+    map.addListener('click', (event) => {
+        handleMapClick(event.latLng);
     });
 
     // Start the game by setting a random target location
@@ -38,11 +47,14 @@ function initMap() {
     alert(`${players[currentPlayerIndex].name}'s turn!`);
 }
 
-// Function to set a random target location
+// Function to set a random target location and update Street View
 function setRandomTargetLocation() {
     const lat = (Math.random() * 180 - 90).toFixed(6); // Random latitude between -90 and 90
     const lng = (Math.random() * 360 - 180).toFixed(6); // Random longitude between -180 and 180
-    targetLocation = L.latLng(parseFloat(lat), parseFloat(lng));
+    targetLocation = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+
+    // Update Street View to the new target location
+    streetView.setPosition(targetLocation);
 
     console.log(`Target location: ${targetLocation.toString()}`); // For debugging
 }
@@ -50,7 +62,7 @@ function setRandomTargetLocation() {
 // Function to handle map clicks
 function handleMapClick(latLng) {
     // Calculate the distance between the guessed location and the target location
-    const distance = map.distance(latLng, targetLocation); // Distance in meters
+    const distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, targetLocation);
 
     // Convert distance to kilometers and calculate points
     const distanceInKm = (distance / 1000).toFixed(2);
@@ -60,13 +72,21 @@ function handleMapClick(latLng) {
     players[currentPlayerIndex].score += points;
 
     // Place a marker where the user clicked
-    L.marker(latLng).addTo(map).bindPopup(`${players[currentPlayerIndex].name}'s Guess`).openPopup();
+    new google.maps.Marker({
+        position: latLng,
+        map: map,
+        title: `${players[currentPlayerIndex].name}'s Guess`,
+    });
 
     // Place a marker at the target location
-    L.marker(targetLocation)
-        .addTo(map)
-        .bindPopup('Target Location')
-        .openPopup();
+    new google.maps.Marker({
+        position: targetLocation,
+        map: map,
+        title: `Target Location`,
+        icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png", // Green marker for the target
+        },
+    });
 
     // Display the result
     alert(`${players[currentPlayerIndex].name} guessed ${distanceInKm} km away and earned ${points} points!`);
@@ -102,7 +122,7 @@ function endGame() {
     alert(`Game Over! The winner is ${winner.name} with ${winner.score} points!`);
 
     // Disable further interaction
-    map.off('click');
+    map.setOptions({ draggable: false, zoomControl: false, scrollwheel: false, disableDoubleClickZoom: true });
     document.getElementById('guess-button').disabled = true;
 }
 
@@ -124,6 +144,6 @@ document.getElementById('name-form').addEventListener('submit', (event) => {
     document.getElementById('name-form-container').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
 
-    // Initialize the map
+    // Initialize the map and Street View
     initMap();
 });
