@@ -17,21 +17,11 @@ function updateScoreboard() {
 
 // Function to initialize the Google Map
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 0, lng: 0 }, // Center of the map
-        zoom: 2, // Zoom level
-        mapTypeId: 'roadmap', // Map type
+    console.log("Google Maps initialized");
+    const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 0, lng: 0 },
+        zoom: 2,
     });
-
-    // Add a click listener to the map
-    map.addListener('click', (event) => {
-        handleMapClick(event.latLng);
-    });
-
-    // Start the game by setting a random target location
-    setRandomTargetLocation();
-    updateScoreboard();
-    alert(`${players[currentPlayerIndex].name}'s turn!`);
 }
 
 // Function to set a random target location
