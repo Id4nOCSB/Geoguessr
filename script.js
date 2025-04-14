@@ -15,20 +15,34 @@ function updateScoreboard() {
     `;
 }
 
-// Function to initialize the Google Map
+// Function to initialize the Leaflet Map
 function initMap() {
-    console.log("Google Maps initialized");
-    const map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 0, lng: 0 },
-        zoom: 2,
+    console.log("Leaflet Map initialized");
+
+    // Initialize the map
+    map = L.map('map').setView([0, 0], 2); // Center at [0, 0] with zoom level 2
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // Add a click listener to the map
+    map.on('click', (event) => {
+        handleMapClick(event.latlng);
     });
+
+    // Start the game by setting a random target location
+    setRandomTargetLocation();
+    updateScoreboard();
+    alert(`${players[currentPlayerIndex].name}'s turn!`);
 }
 
 // Function to set a random target location
 function setRandomTargetLocation() {
     const lat = (Math.random() * 180 - 90).toFixed(6); // Random latitude between -90 and 90
     const lng = (Math.random() * 360 - 180).toFixed(6); // Random longitude between -180 and 180
-    targetLocation = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+    targetLocation = L.latLng(parseFloat(lat), parseFloat(lng));
 
     console.log(`Target location: ${targetLocation.toString()}`); // For debugging
 }
@@ -36,7 +50,7 @@ function setRandomTargetLocation() {
 // Function to handle map clicks
 function handleMapClick(latLng) {
     // Calculate the distance between the guessed location and the target location
-    const distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, targetLocation);
+    const distance = map.distance(latLng, targetLocation); // Distance in meters
 
     // Convert distance to kilometers and calculate points
     const distanceInKm = (distance / 1000).toFixed(2);
@@ -46,21 +60,13 @@ function handleMapClick(latLng) {
     players[currentPlayerIndex].score += points;
 
     // Place a marker where the user clicked
-    new google.maps.Marker({
-        position: latLng,
-        map: map,
-        title: `${players[currentPlayerIndex].name}'s Guess`,
-    });
+    L.marker(latLng).addTo(map).bindPopup(`${players[currentPlayerIndex].name}'s Guess`).openPopup();
 
     // Place a marker at the target location
-    new google.maps.Marker({
-        position: targetLocation,
-        map: map,
-        title: `Target Location`,
-        icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png", // Green marker for the target
-        },
-    });
+    L.marker(targetLocation)
+        .addTo(map)
+        .bindPopup('Target Location')
+        .openPopup();
 
     // Display the result
     alert(`${players[currentPlayerIndex].name} guessed ${distanceInKm} km away and earned ${points} points!`);
@@ -96,7 +102,7 @@ function endGame() {
     alert(`Game Over! The winner is ${winner.name} with ${winner.score} points!`);
 
     // Disable further interaction
-    map.setOptions({ draggable: false, zoomControl: false, scrollwheel: false, disableDoubleClickZoom: true });
+    map.off('click');
     document.getElementById('guess-button').disabled = true;
 }
 
